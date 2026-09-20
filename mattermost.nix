@@ -10,7 +10,14 @@ in
     domain = lib.mkOption {
       type = lib.types.str;
       default = "localhost";
+      example = "chat.example.com";
       description = "Domain name used for Mattermost.";
+    };
+
+    https.enable = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Enable HTTPS for Mattermost.";
     };
   };
 
@@ -18,7 +25,10 @@ in
     services.mattermost = {
       enable = true;
 
-      siteUrl = "http://${cfg.domain}";
+      siteUrl =
+        if cfg.https.enable
+        then "https://${cfg.domain}"
+        else "http://${cfg.domain}";
 
       host = "127.0.0.1";
       port = 8065;
@@ -43,6 +53,8 @@ in
       recommendedProxySettings = true;
 
       virtualHosts.${cfg.domain} = {
+        forceSSL = cfg.https.enable;
+
         locations."/" = {
           proxyPass = "http://127.0.0.1:8065";
           proxyWebsockets = true;
